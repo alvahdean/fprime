@@ -46,6 +46,6 @@ Use FreeRTOS-focused tests by default:
 - Generate a UT cache with common shared OS rule suites disabled:
   - `fprime-util generate freertos-generic --ut -DOS_FREERTOS_ENABLE_COMMON_UTS=OFF -f`
 - Run FreeRTOS module tests:
-  - `fprime-util check --build-cache /home/dfuqua/src/fprime/build-fprime-automatic-freertos-generic-ut --path /home/dfuqua/src/fprime/FreeRTOS/FreeRTOS/Os --recursive`
+  - `fprime-util check --build-cache ${HOME}/src/fprime/build-fprime-automatic-freertos-generic-ut --path ${HOME}/src/fprime/FreeRTOS/FreeRTOS/Os --recursive`
 
 This baseline intentionally does not require all host-oriented or Posix-coupled unit tests to pass under FreeRTOS.

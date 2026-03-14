@@ -5,7 +5,6 @@
 
 #include "FreeRTOS/Os/RawTime.hpp"
 
-#include <atomic>
 #include <limits>
 
 #include "FreeRTOS/Os/FreeRTOSApi.hpp"
@@ -16,8 +15,8 @@ namespace FreeRTOS {
 namespace RawTime {
 
 namespace {
-std::atomic<TickType_t> s_last_tick{0};
-std::atomic<U64> s_tick_wrap_offset{0};
+TickType_t s_last_tick = 0;
+U64 s_tick_wrap_offset = 0;
 
 U64 currentTickCountExtended() {
     const TickType_t current = xTaskGetTickCount();
@@ -27,7 +26,7 @@ U64 currentTickCountExtended() {
 
     if (current < previous) {
         const U64 wrap_amount = static_cast<U64>(std::numeric_limits<TickType_t>::max()) + 1ULL;
-        s_tick_wrap_offset.fetch_add(wrap_amount, std::memory_order_acq_rel);
+        s_tick_wrap_offset += wrap_amount;
     }
     const U64 extended = s_tick_wrap_offset + static_cast<U64>(current);
     Api::exitCritical();
