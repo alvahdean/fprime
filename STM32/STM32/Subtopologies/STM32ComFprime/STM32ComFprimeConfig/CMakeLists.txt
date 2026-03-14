@@ -1,0 +1,11 @@
+register_fprime_config(
+    EXCLUDE_FROM_ALL
+    SOURCES
+        "${CMAKE_CURRENT_LIST_DIR}/STM32ComFprimeSubtopologyConfig.cpp"
+    HEADERS
+        "${CMAKE_CURRENT_LIST_DIR}/STM32ComFprimeSubtopologyConfig.hpp"
+    AUTOCODER_INPUTS
+        "${CMAKE_CURRENT_LIST_DIR}/STM32ComFprimeConfig.fpp"
+    DEPENDS
+        Fw_Types
+)

@@ -1,0 +1,7 @@
+#ifndef STM32_STM32COMFPRIME_PINGENTRIES_HPP
+#define STM32_STM32COMFPRIME_PINGENTRIES_HPP
+
+namespace PingEntries {
+}
+
+#endif
