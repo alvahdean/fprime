@@ -1,0 +1,147 @@
+#include "ESP32/Drv/Esp32WifiDriver/Esp32WifiDriver.hpp"
+
+#if defined(ESP_PLATFORM)
+extern "C" {
+#include <errno.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <lwip/inet.h>
+#include <lwip/sockets.h>
+}
+#endif
+
+namespace Drv {
+
+Esp32WifiDriver::Esp32WifiDriver(const char* compName)
+    : Esp32WifiDriverComponentBase(compName),
+      m_configured(false),
+      m_ready_sent(false),
+      m_socket(-1),
+      m_rx_buffer_size(2048) {}
+
+Esp32WifiDriver::~Esp32WifiDriver() {}
+
+bool Esp32WifiDriver::configure(const char* remote_ip, U16 remote_port, U16 local_port, U32 rx_buffer_size) {
+    this->m_rx_buffer_size = rx_buffer_size;
+
+#if defined(ESP_PLATFORM)
+    if (remote_ip == nullptr || remote_port == 0U) {
+        return false;
+    }
+    this->m_socket = lwip_socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
+    if (this->m_socket < 0) {
+        return false;
+    }
+
+    sockaddr_in local_addr = {};
+    local_addr.sin_family = AF_INET;
+    local_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    local_addr.sin_port = htons(local_port);
+    if (lwip_bind(this->m_socket, reinterpret_cast<const sockaddr*>(&local_addr), sizeof(local_addr)) != 0) {
+        lwip_close(this->m_socket);
+        this->m_socket = -1;
+        return false;
+    }
+
+    this->m_remote_addr = {};
+    this->m_remote_addr.sin_family = AF_INET;
+    this->m_remote_addr.sin_port = htons(remote_port);
+    this->m_remote_addr.sin_addr.s_addr = inet_addr(remote_ip);
+    if (this->m_remote_addr.sin_addr.s_addr == INADDR_NONE) {
+        lwip_close(this->m_socket);
+        this->m_socket = -1;
+        return false;
+    }
+
+#else
+    static_cast<void>(remote_ip);
+    static_cast<void>(remote_port);
+    static_cast<void>(local_port);
+#endif
+
+    this->m_configured = true;
+    this->m_ready_sent = false;
+    return true;
+}
+
+void Esp32WifiDriver::primeReady() {
+    if (!this->m_configured) {
+        return;
+    }
+    if (!this->m_ready_sent && this->isConnected_ready_OutputPort(0)) {
+        this->ready_out(0);
+        this->m_ready_sent = true;
+    }
+}
+
+void Esp32WifiDriver::run_handler(FwIndexType portNum, U32 context) {
+    static_cast<void>(portNum);
+    static_cast<void>(context);
+    if (!this->m_configured) {
+        return;
+    }
+
+    this->primeReady();
+
+    if (!this->isConnected_recv_OutputPort(0)) {
+        return;
+    }
+
+    Fw::Buffer buffer = this->allocate_out(0, this->m_rx_buffer_size);
+    if ((buffer.getData() == nullptr) || (buffer.getSize() == 0U)) {
+        return;
+    }
+
+#if defined(ESP_PLATFORM)
+    const int read = lwip_recv(this->m_socket, buffer.getData(), static_cast<size_t>(buffer.getSize()), MSG_DONTWAIT);
+    if (read > 0) {
+        buffer.setSize(static_cast<FwSizeType>(read));
+        this->recv_out(0, buffer, Drv::ByteStreamStatus::OP_OK);
+        return;
+    }
+#endif
+
+    this->deallocate_out(0, buffer);
+}
+
+Drv::ByteStreamStatus Esp32WifiDriver::send_handler(FwIndexType portNum, Fw::Buffer& sendBuffer) {
+    static_cast<void>(portNum);
+#if defined(ESP_PLATFORM)
+    if (this->m_socket < 0) {
+        return Drv::ByteStreamStatus::OTHER_ERROR;
+    }
+    constexpr U32 RETRY_LIMIT = 3U;
+    for (U32 attempt = 0; attempt < RETRY_LIMIT; attempt++) {
+        const int sent = lwip_sendto(this->m_socket,
+                                     sendBuffer.getData(),
+                                     static_cast<size_t>(sendBuffer.getSize()),
+                                     0,
+                                     reinterpret_cast<const sockaddr*>(&this->m_remote_addr),
+                                     sizeof(this->m_remote_addr));
+        if (sent == static_cast<int>(sendBuffer.getSize())) {
+            return Drv::ByteStreamStatus::OP_OK;
+        }
+        if ((sent < 0) && ((errno == EAGAIN) || (errno == EWOULDBLOCK) || (errno == ENOMEM) || (errno == ENOBUFS))) {
+            if ((attempt + 1U) < RETRY_LIMIT) {
+                vTaskDelay(pdMS_TO_TICKS(1));
+                continue;
+            }
+            // UDP downlink is lossy by design. Drop this datagram rather than stalling ComQueue on transient socket
+            // backpressure.
+            return Drv::ByteStreamStatus::OP_OK;
+        }
+        return Drv::ByteStreamStatus::OTHER_ERROR;
+    }
+    return Drv::ByteStreamStatus::OP_OK;
+#else
+    static_cast<void>(sendBuffer);
+    return Drv::ByteStreamStatus::OTHER_ERROR;
+#endif
+}
+
+void Esp32WifiDriver::recvReturnIn_handler(FwIndexType portNum, Fw::Buffer& fwBuffer) {
+    static_cast<void>(portNum);
+    this->deallocate_out(0, fwBuffer);
+}
+
+}  // namespace Drv

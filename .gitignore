@@ -90,8 +90,11 @@ depend
 /.idea/
 /venv/
 /.venv/
+build-*/
 
 Packet-Views
 docs/reference/api/cpp
 docs/reference/api/cmake
 temp_dir/
+
+ESP32/ESP32/Deployments/Esp32RefWifi/wifi.config

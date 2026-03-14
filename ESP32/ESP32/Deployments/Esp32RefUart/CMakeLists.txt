@@ -1,0 +1,23 @@
+cmake_policy(SET CMP0048 NEW)
+cmake_minimum_required(VERSION 3.26)
+project(Esp32RefUart VERSION 0.1.0 LANGUAGES C CXX)
+
+set(FPRIME_INCLUDE_FRAMEWORK_CODE ON)
+find_package(FPrime REQUIRED PATHS "${CMAKE_CURRENT_LIST_DIR}/../../../..")
+
+add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/config")
+add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/Top")
+
+register_fprime_deployment(
+    Esp32RefUart
+    SOURCES
+        "${CMAKE_CURRENT_LIST_DIR}/Main.cpp"
+    DEPENDS
+        ESP32_Deployments_Esp32RefUart_Top
+        ESP32_Drv_Esp32UartDriver
+        ESP32_Subtopologies_ESP32CdhCore
+        ESP32_Subtopologies_ESP32ComCcsds
+        Svc_OsTime
+)
+
+add_custom_target(ESP32_Deployments_Esp32RefUart DEPENDS Esp32RefUart)

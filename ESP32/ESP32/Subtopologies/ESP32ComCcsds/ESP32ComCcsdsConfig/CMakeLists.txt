@@ -1,0 +1,11 @@
+register_fprime_config(
+    EXCLUDE_FROM_ALL
+    SOURCES
+        "${CMAKE_CURRENT_LIST_DIR}/ESP32ComCcsdsSubtopologyConfig.cpp"
+    HEADERS
+        "${CMAKE_CURRENT_LIST_DIR}/ESP32ComCcsdsSubtopologyConfig.hpp"
+    AUTOCODER_INPUTS
+        "${CMAKE_CURRENT_LIST_DIR}/ESP32ComCcsdsConfig.fpp"
+    DEPENDS
+        Fw_Types
+)

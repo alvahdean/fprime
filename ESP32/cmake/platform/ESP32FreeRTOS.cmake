@@ -1,0 +1,6 @@
+# ESP32 + FreeRTOS platform file
+
+set(FPRIME_USE_POSIX OFF)
+set(FPRIME_HAS_SOCKETS OFF)
+set(FPRIME_USE_BAREMETAL_SCHEDULER OFF)
+add_compile_definitions(TGT_OS_TYPE_ESP32)

@@ -1,0 +1,17 @@
+register_fprime_module(
+    ESP32_Deployments_Esp32RefUart_Top
+    AUTOCODER_INPUTS
+      "${CMAKE_CURRENT_LIST_DIR}/instances.fpp"
+      "${CMAKE_CURRENT_LIST_DIR}/topology.fpp"
+    SOURCES
+      "${CMAKE_CURRENT_LIST_DIR}/Esp32RefUartTopology.cpp"
+    HEADERS
+      "${CMAKE_CURRENT_LIST_DIR}/Esp32RefUartTopology.hpp"
+      "${CMAKE_CURRENT_LIST_DIR}/Esp32RefUartTopologyDefs.hpp"
+    DEPENDS
+      Svc_OsTime
+      ESP32_Drv_Esp32UartDriver
+      ESP32_Subtopologies_ESP32CdhCore
+      ESP32_Subtopologies_ESP32ComCcsds
+      ESP32_Svc_FreeRtosTimer
+)

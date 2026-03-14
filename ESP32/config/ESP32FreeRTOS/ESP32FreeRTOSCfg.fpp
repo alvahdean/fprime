@@ -1,0 +1,9 @@
+module ESP32FreeRTOSConfig {
+  constant LOG_ASSERT_ROUTING_PLACEHOLDER = 0
+  constant SERIAL_BUFFER_SIZE_HINT = 1024
+  constant STRING_SIZE_HINT = 256
+  constant TICK_RATE_HZ_ASSUMPTION = 100
+
+  constant DEFAULT_STACK_SIZE = 4096
+  constant DEFAULT_QUEUE_DEPTH = 16
+}

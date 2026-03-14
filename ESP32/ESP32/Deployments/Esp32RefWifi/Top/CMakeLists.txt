@@ -1,0 +1,17 @@
+register_fprime_module(
+    ESP32_Deployments_Esp32RefWifi_Top
+    AUTOCODER_INPUTS
+      "${CMAKE_CURRENT_LIST_DIR}/instances.fpp"
+      "${CMAKE_CURRENT_LIST_DIR}/topology.fpp"
+    SOURCES
+      "${CMAKE_CURRENT_LIST_DIR}/Esp32RefWifiTopology.cpp"
+    HEADERS
+      "${CMAKE_CURRENT_LIST_DIR}/Esp32RefWifiTopology.hpp"
+      "${CMAKE_CURRENT_LIST_DIR}/Esp32RefWifiTopologyDefs.hpp"
+    DEPENDS
+      Svc_OsTime
+      ESP32_Drv_Esp32WifiDriver
+      ESP32_Subtopologies_ESP32CdhCore
+      ESP32_Subtopologies_ESP32ComCcsds
+      ESP32_Svc_FreeRtosTimer
+)

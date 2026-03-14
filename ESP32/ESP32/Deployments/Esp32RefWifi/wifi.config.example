@@ -1,0 +1,19 @@
+# Local Wi-Fi provisioning defaults for provision_wifi_config.sh
+# This file is not consumed by the deployment directly.
+# The script reads it, then writes the values into the fprimecfg NVS partition.
+
+MODE=sta
+
+AP_SSID="fprime-esp32"
+AP_PASS="change-me"
+AP_REMOTE_IP="192.168.4.2"
+AP_REMOTE_PORT=50000
+AP_LOCAL_PORT=50000
+AP_CHANNEL=6
+AP_MAX_CONN=4
+
+STA_SSID="your-wifi-ssid"
+STA_PASS="your-wifi-password"
+STA_REMOTE_IP="192.168.1.10"
+STA_REMOTE_PORT=50000
+STA_LOCAL_PORT=50000
