@@ -5,6 +5,7 @@
 
 #include "FreeRTOS/Os/ConditionVariable.hpp"
 
+#include "FreeRTOS/Os/FreeRTOSApi.hpp"
 #include "FreeRTOS/Os/Mutex.hpp"
 
 namespace Os {
@@ -31,15 +32,15 @@ FreeRtosConditionVariable::Status FreeRtosConditionVariable::pend(Os::Mutex& mut
         return Status::NOT_SUPPORTED;
     }
 
-    taskENTER_CRITICAL();
+    Api::enterCritical();
     this->m_handle.m_waiters += 1;
-    taskEXIT_CRITICAL();
+    Api::exitCritical();
 
     const Os::Mutex::Status release_status = mutex.release();
     if (release_status != Os::Mutex::Status::OP_OK) {
-        taskENTER_CRITICAL();
+        Api::enterCritical();
         this->m_handle.m_waiters -= 1;
-        taskEXIT_CRITICAL();
+        Api::exitCritical();
         return Status::ERROR_MUTEX_NOT_HELD;
     }
 
@@ -50,13 +51,13 @@ FreeRtosConditionVariable::Status FreeRtosConditionVariable::pend(Os::Mutex& mut
             return Status::ERROR_OTHER;
         }
 
-        taskENTER_CRITICAL();
+        Api::enterCritical();
         if (this->m_handle.m_pending_signals > 0) {
             this->m_handle.m_pending_signals -= 1;
             this->m_handle.m_waiters -= 1;
             observed_signal = true;
         }
-        taskEXIT_CRITICAL();
+        Api::exitCritical();
     }
 
     return (mutex.take() == Os::Mutex::Status::OP_OK) ? Status::OP_OK : Status::ERROR_OTHER;
@@ -68,12 +69,12 @@ void FreeRtosConditionVariable::notify() {
     }
 
     bool should_signal = false;
-    taskENTER_CRITICAL();
+    Api::enterCritical();
     if (this->m_handle.m_waiters > this->m_handle.m_pending_signals) {
         this->m_handle.m_pending_signals += 1;
         should_signal = true;
     }
-    taskEXIT_CRITICAL();
+    Api::exitCritical();
 
     if (should_signal) {
         (void)xSemaphoreGive(this->m_handle.m_condition);
@@ -86,12 +87,12 @@ void FreeRtosConditionVariable::notifyAll() {
     }
 
     U32 to_signal = 0;
-    taskENTER_CRITICAL();
+    Api::enterCritical();
     if (this->m_handle.m_waiters > this->m_handle.m_pending_signals) {
         to_signal = this->m_handle.m_waiters - this->m_handle.m_pending_signals;
         this->m_handle.m_pending_signals += to_signal;
     }
-    taskEXIT_CRITICAL();
+    Api::exitCritical();
 
     for (U32 i = 0; i < to_signal; i++) {
         (void)xSemaphoreGive(this->m_handle.m_condition);

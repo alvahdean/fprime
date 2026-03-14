@@ -21,16 +21,17 @@ std::atomic<U64> s_tick_wrap_offset{0};
 
 U64 currentTickCountExtended() {
     const TickType_t current = xTaskGetTickCount();
-    TickType_t previous = s_last_tick.load(std::memory_order_relaxed);
-    while (!s_last_tick.compare_exchange_weak(previous, current, std::memory_order_acq_rel, std::memory_order_relaxed)) {
-    }
+    Api::enterCritical();
+    const TickType_t previous = s_last_tick;
+    s_last_tick = current;
 
     if (current < previous) {
         const U64 wrap_amount = static_cast<U64>(std::numeric_limits<TickType_t>::max()) + 1ULL;
         s_tick_wrap_offset.fetch_add(wrap_amount, std::memory_order_acq_rel);
     }
-
-    return s_tick_wrap_offset.load(std::memory_order_acquire) + static_cast<U64>(current);
+    const U64 extended = s_tick_wrap_offset + static_cast<U64>(current);
+    Api::exitCritical();
+    return extended;
 }
 
 U64 ticksToMicroseconds(U64 ticks) {

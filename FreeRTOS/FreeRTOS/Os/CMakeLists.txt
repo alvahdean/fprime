@@ -5,7 +5,7 @@
 # MOD_DEPS: (optional) module dependencies
 #
 ####
-restrict_platforms(FreeRTOS)
+restrict_platforms(FreeRTOS FreeRtosStm32 ESP32FreeRTOS)
 add_custom_target("${FPRIME_CURRENT_MODULE}")
 
 register_fprime_module(

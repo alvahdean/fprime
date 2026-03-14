@@ -13,9 +13,7 @@
 namespace Os {
 namespace FreeRTOS {
 namespace Task {
-
 namespace {
-
 UBaseType_t convertPriority(const FwTaskPriorityType priority, Os::Task::Status& status) {
     status = Os::Task::Status::OP_OK;
     if (priority == Os::Task::TASK_PRIORITY_DEFAULT) {
@@ -32,7 +30,7 @@ UBaseType_t convertPriority(const FwTaskPriorityType priority, Os::Task::Status&
     return static_cast<UBaseType_t>(priority);
 }
 
-UBaseType_t convertStackWords(const FwSizeType stack_size, Os::Task::Status& status) {
+UBaseType_t convertStackDepth(const FwSizeType stack_size, Os::Task::Status& status) {
     status = Os::Task::Status::OP_OK;
     if (stack_size == Os::Task::TASK_DEFAULT) {
         return static_cast<UBaseType_t>(configMINIMAL_STACK_SIZE);
@@ -43,12 +41,17 @@ UBaseType_t convertStackWords(const FwSizeType stack_size, Os::Task::Status& sta
         return 0;
     }
 
+#if defined(ESP_PLATFORM)
+    // ESP-IDF's FreeRTOS API expects stack sizes in bytes, unlike vanilla FreeRTOS.
+    return static_cast<UBaseType_t>(stack_size);
+#else
     const FwSizeType bytes_per_word = sizeof(StackType_t);
     UBaseType_t words = static_cast<UBaseType_t>((stack_size + (bytes_per_word - 1)) / bytes_per_word);
     if (words == 0) {
         words = 1;
     }
     return words;
+#endif
 }
 
 TickType_t intervalToTicks(const Fw::TimeInterval& interval, Os::Task::Status& status) {
@@ -145,7 +148,7 @@ Os::Task::Status FreeRtosTask::start(const Arguments& arguments) {
     }
 
     Os::Task::Status stack_status = Os::Task::Status::OP_OK;
-    const UBaseType_t stack_words = convertStackWords(arguments.m_stackSize, stack_status);
+    const UBaseType_t stack_depth = convertStackDepth(arguments.m_stackSize, stack_status);
     if (stack_status != Os::Task::Status::OP_OK) {
         delete context;
         vSemaphoreDelete(state->m_join_semaphore);
@@ -158,7 +161,7 @@ Os::Task::Status FreeRtosTask::start(const Arguments& arguments) {
 #if defined(configSUPPORT_DYNAMIC_ALLOCATION) && (configSUPPORT_DYNAMIC_ALLOCATION == 1)
     BaseType_t create_status = xTaskCreate(taskEntry,
                                            arguments.m_name.toChar(),
-                                           stack_words,
+                                           stack_depth,
                                            context,
                                            priority,
                                            &task_handle);
@@ -173,11 +176,14 @@ Os::Task::Status FreeRtosTask::start(const Arguments& arguments) {
         if (allocator != nullptr) {
             StaticTask_t* task_buffer = nullptr;
             StackType_t* stack_buffer = nullptr;
-            U32 stack_depth_words = static_cast<U32>(stack_words);
-            if (allocator(arguments, task_buffer, stack_buffer, stack_depth_words)) {
+            U32 allocator_stack_depth = static_cast<U32>(stack_depth);
+#if !defined(ESP_PLATFORM)
+            allocator_stack_depth = static_cast<U32>(stack_depth);
+#endif
+            if (allocator(arguments, task_buffer, stack_buffer, allocator_stack_depth)) {
                 task_handle = xTaskCreateStatic(taskEntry,
                                                 arguments.m_name.toChar(),
-                                                static_cast<UBaseType_t>(stack_depth_words),
+                                                static_cast<UBaseType_t>(allocator_stack_depth),
                                                 context,
                                                 priority,
                                                 stack_buffer,

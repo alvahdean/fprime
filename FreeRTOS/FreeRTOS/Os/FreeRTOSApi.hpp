@@ -183,4 +183,35 @@ inline std::size_t xPortGetMinimumEverFreeHeapSize() {
 
 #endif
 
+namespace Os {
+namespace FreeRTOS {
+namespace Api {
+
+#if OS_FREERTOS_HAS_KERNEL && defined(ESP_PLATFORM)
+inline portMUX_TYPE& criticalSectionMutex() {
+    static portMUX_TYPE s_critical_mutex = portMUX_INITIALIZER_UNLOCKED;
+    return s_critical_mutex;
+}
+#endif
+
+inline void enterCritical() {
+#if OS_FREERTOS_HAS_KERNEL && defined(ESP_PLATFORM)
+    taskENTER_CRITICAL(&criticalSectionMutex());
+#else
+    taskENTER_CRITICAL();
+#endif
+}
+
+inline void exitCritical() {
+#if OS_FREERTOS_HAS_KERNEL && defined(ESP_PLATFORM)
+    taskEXIT_CRITICAL(&criticalSectionMutex());
+#else
+    taskEXIT_CRITICAL();
+#endif
+}
+
+}  // namespace Api
+}  // namespace FreeRTOS
+}  // namespace Os
+
 #endif
