@@ -103,6 +103,28 @@ Flash with the provided helper:
 
 The same flow works for `Esp32RefWifi` by changing the deployment path.
 
+Start the monitor automatically after a successful flash:
+
+```bash
+"${FPRIME_REPO_ROOT}/ESP32/scripts/flash.sh" \
+  "${FPRIME_REPO_ROOT}/ESP32/ESP32/Deployments/Esp32RefUart" \
+  --port /dev/ttyUSB0 --baud 460800 --monitor
+```
+
+## Monitoring
+Monitor the serial console with the provided helper:
+
+```bash
+"${FPRIME_REPO_ROOT}/ESP32/scripts/monitor.sh" \
+  "${FPRIME_REPO_ROOT}/ESP32/ESP32/Deployments/Esp32RefUart" \
+  --port /dev/ttyUSB0
+```
+
+Optional flags:
+- `--baud <rate>` to override the deployment monitor baud
+- `--timestamps` to add timestamps to monitor output
+- `--no-reset` to avoid resetting the target when the monitor starts
+
 ## Deployment Status
 ### `Esp32RefUart`
 - `fprime-util generate esp32-idf` verified

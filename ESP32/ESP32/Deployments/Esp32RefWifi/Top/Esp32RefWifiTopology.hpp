@@ -8,6 +8,7 @@ namespace Esp32RefWifi {
 
 void setupTopology(const TopologyState& state);
 void teardownTopology(const TopologyState& state);
+bool waitForGroundConnection(const Fw::TimeInterval& pollInterval, const Fw::TimeInterval& timeout);
 void startRateGroups(const Fw::TimeInterval& interval);
 void stopRateGroups();
 

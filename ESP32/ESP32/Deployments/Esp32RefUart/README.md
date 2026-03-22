@@ -20,6 +20,8 @@ fprime-util build
 
 "${FPRIME_REPO_ROOT}/ESP32/scripts/build_flash_image.sh" .
 "${FPRIME_REPO_ROOT}/ESP32/scripts/flash.sh" . --port /dev/ttyUSB0 --baud 460800
+"${FPRIME_REPO_ROOT}/ESP32/scripts/flash.sh" . --port /dev/ttyUSB0 --baud 460800 --monitor
+"${FPRIME_REPO_ROOT}/ESP32/scripts/monitor.sh" . --port /dev/ttyUSB0
 ```
 
 ## Current Defaults

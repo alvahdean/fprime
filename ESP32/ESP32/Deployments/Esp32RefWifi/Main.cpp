@@ -31,6 +31,8 @@ namespace {
 
 static constexpr U32 STARTUP_TASK_STACK_BYTES = 8U * 1024U;
 static constexpr TickType_t STARTUP_QUIESCE_TICKS = pdMS_TO_TICKS(1000);
+static const Fw::TimeInterval GROUND_CONNECT_POLL_INTERVAL(0, 100000);
+static const Fw::TimeInterval GROUND_CONNECT_TIMEOUT(15, 0);
 static constexpr const char* WIFI_CONFIG_PARTITION = "fprimecfg";
 static constexpr const char* WIFI_CONFIG_NAMESPACE = "wifi";
 
@@ -64,6 +66,41 @@ struct WifiRuntimeConfig {
 };
 
 static WifiRuntimeConfig s_runtime_wifi_config = {};
+
+const char* wifiDisconnectReasonToString(const wifi_err_reason_t reason) {
+    switch (reason) {
+        case WIFI_REASON_AUTH_EXPIRE:
+            return "AUTH_EXPIRE";
+        case WIFI_REASON_4WAY_HANDSHAKE_TIMEOUT:
+            return "4WAY_HANDSHAKE_TIMEOUT";
+        case WIFI_REASON_HANDSHAKE_TIMEOUT:
+            return "HANDSHAKE_TIMEOUT";
+        case WIFI_REASON_AUTH_FAIL:
+            return "AUTH_FAIL";
+        case WIFI_REASON_ASSOC_FAIL:
+            return "ASSOC_FAIL";
+        case WIFI_REASON_CONNECTION_FAIL:
+            return "CONNECTION_FAIL";
+        case WIFI_REASON_NO_AP_FOUND:
+            return "NO_AP_FOUND";
+        case WIFI_REASON_NO_AP_FOUND_W_COMPATIBLE_SECURITY:
+            return "NO_AP_FOUND_W_COMPATIBLE_SECURITY";
+        case WIFI_REASON_NO_AP_FOUND_IN_AUTHMODE_THRESHOLD:
+            return "NO_AP_FOUND_IN_AUTHMODE_THRESHOLD";
+        case WIFI_REASON_NO_AP_FOUND_IN_RSSI_THRESHOLD:
+            return "NO_AP_FOUND_IN_RSSI_THRESHOLD";
+        case WIFI_REASON_BEACON_TIMEOUT:
+            return "BEACON_TIMEOUT";
+        case WIFI_REASON_ASSOC_LEAVE:
+            return "ASSOC_LEAVE";
+        case WIFI_REASON_ASSOC_NOT_AUTHED:
+            return "ASSOC_NOT_AUTHED";
+        case WIFI_REASON_TIMEOUT:
+            return "TIMEOUT";
+        default:
+            return "UNKNOWN";
+    }
+}
 
 void boardConsoleWrite(const CHAR* message, FwSizeType size) {
     if ((message == nullptr) || (size == 0)) {
@@ -369,8 +406,11 @@ void wifiEventHandler(void* argument,
             case WIFI_EVENT_STA_CONNECTED:
                 consoleLog("Wi-Fi STA connected to AP");
                 break;
-            case WIFI_EVENT_STA_DISCONNECTED:
-                consoleLog("Wi-Fi STA disconnected from AP");
+            case WIFI_EVENT_STA_DISCONNECTED: {
+                const auto* event = static_cast<wifi_event_sta_disconnected_t*>(event_data);
+                consoleLog("Wi-Fi STA disconnected from AP: reason=%u (%s)",
+                           static_cast<unsigned>(event->reason),
+                           wifiDisconnectReasonToString(static_cast<wifi_err_reason_t>(event->reason)));
                 if (s_wifi_event_group != nullptr) {
                     xEventGroupClearBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
                     xEventGroupSetBits(s_wifi_event_group, WIFI_FAILURE_BIT);
@@ -379,6 +419,7 @@ void wifiEventHandler(void* argument,
                     static_cast<void>(esp_wifi_connect());
                 }
                 break;
+            }
             default:
                 break;
         }
@@ -387,7 +428,7 @@ void wifiEventHandler(void* argument,
 
     if ((event_base == IP_EVENT) && (event_id == IP_EVENT_STA_GOT_IP)) {
         const auto* event = static_cast<ip_event_got_ip_t*>(event_data);
-        consoleLog("Wi-Fi STA got IP: " IPSTR, IP2STR(&event->ip_info.ip));
+        consoleLog("Wi-Fi STA got IP: " IPSTR " gateway=" IPSTR, IP2STR(&event->ip_info.ip), IP2STR(&event->ip_info.gw));
         if (s_wifi_event_group != nullptr) {
             xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
             xEventGroupClearBits(s_wifi_event_group, WIFI_FAILURE_BIT);
@@ -518,10 +559,19 @@ bool initializeWifiStation(const Esp32RefWifi::TopologyState& state) {
         return false;
     }
 
+    status = esp_wifi_set_ps(WIFI_PS_NONE);
+    if (status != ESP_OK) {
+        consoleLog("Wi-Fi STA disable power save failed (%d)", static_cast<int>(status));
+        return false;
+    }
+
     const EventBits_t bits = xEventGroupWaitBits(
         s_wifi_event_group, WIFI_CONNECTED_BIT | WIFI_FAILURE_BIT, pdFALSE, pdFALSE, pdMS_TO_TICKS(15000));
     if ((bits & WIFI_CONNECTED_BIT) == 0U) {
-        consoleLog("Wi-Fi STA failed to obtain a connection within timeout");
+        consoleLog("Wi-Fi STA did not become ready: event_bits=0x%02x connected=%u failure=%u",
+                   static_cast<unsigned>(bits),
+                   ((bits & WIFI_CONNECTED_BIT) != 0U) ? 1U : 0U,
+                   ((bits & WIFI_FAILURE_BIT) != 0U) ? 1U : 0U);
         return false;
     }
 
@@ -603,6 +653,20 @@ void run_esp32_ref_wifi() {
     FW_ASSERT(wifi_ready);
 
     Esp32RefWifi::setupTopology(state);
+    consoleLog("Ground TCP connection attempt started: %s:%u",
+               state.remoteIp,
+               static_cast<unsigned>(state.remotePort));
+    const bool ground_ready =
+        Esp32RefWifi::waitForGroundConnection(GROUND_CONNECT_POLL_INTERVAL, GROUND_CONNECT_TIMEOUT);
+    if (!ground_ready) {
+        consoleLog("Ground TCP connection failed: %s:%u",
+                   state.remoteIp,
+                   static_cast<unsigned>(state.remotePort));
+    }
+    FW_ASSERT(ground_ready);
+    consoleLog("Ground TCP connection established: %s:%u",
+               state.remoteIp,
+               static_cast<unsigned>(state.remotePort));
     vTaskDelay(STARTUP_QUIESCE_TICKS);
     Esp32RefWifi::startRateGroups(Fw::TimeInterval(0, 100000));
 }

@@ -16,8 +16,17 @@ class Esp32WifiDriver final : public Esp32WifiDriverComponentBase {
     ~Esp32WifiDriver() override;
 
     bool configure(const char* remote_ip, U16 remote_port, U16 local_port, U32 rx_buffer_size = 2048);
+    bool pollTransportReady();
 
   private:
+    enum class ConnectionState {
+        DISCONNECTED,
+        CONNECTED,
+    };
+
+    bool ensureConnected();
+    bool openSocket();
+    void closeSocket();
     void primeReady();
     void run_handler(FwIndexType portNum, U32 context) override;
     Drv::ByteStreamStatus send_handler(FwIndexType portNum, Fw::Buffer& sendBuffer) override;
@@ -26,8 +35,12 @@ class Esp32WifiDriver final : public Esp32WifiDriverComponentBase {
     bool m_configured;
     bool m_ready_sent;
     int m_socket;
+    U16 m_remote_port;
+    U16 m_local_port;
     U32 m_rx_buffer_size;
+    ConnectionState m_connection_state;
 #if defined(ESP_PLATFORM)
+    char m_remote_ip[16];
     sockaddr_in m_remote_addr;
 #endif
 };

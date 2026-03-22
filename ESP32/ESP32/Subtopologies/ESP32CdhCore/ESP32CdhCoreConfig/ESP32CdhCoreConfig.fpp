@@ -11,8 +11,8 @@ module ESP32CdhCoreConfig {
     
     # Reduced substantially for lower-RAM embedded targets (e.g. ESP32)
     module StackSizes {
-        constant cmdDisp     = 4 * 1024
-        constant events      = 8 * 1024
+        constant cmdDisp     = 8 * 1024
+        constant events      = 4 * 1024
         constant tlmSend     = 4 * 1024
     }
 

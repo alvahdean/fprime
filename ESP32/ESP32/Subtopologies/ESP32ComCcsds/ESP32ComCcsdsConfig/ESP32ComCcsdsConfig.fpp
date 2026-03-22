@@ -9,7 +9,7 @@ module ESP32ComCcsdsConfig {
     
     # Reduced substantially for lower-RAM embedded targets (e.g. ESP32)
     module StackSizes {
-        constant comQueue     = 6 * 1024
+        constant comQueue     = 8 * 1024
         constant aggregator   = 4 * 1024
     }
 
@@ -22,7 +22,7 @@ module ESP32ComCcsdsConfig {
     # Reduced substantially for lower-RAM embedded targets (e.g. ESP32)
     module QueueDepths {
         constant events      = 16
-        constant tlm         = 6
+        constant tlm         = 12
         constant file        = 1
     }
 

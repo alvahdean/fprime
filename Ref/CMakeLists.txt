@@ -30,14 +30,6 @@ add_compile_options(
 set(FPRIME_INCLUDE_FRAMEWORK_CODE ON)
 find_package(FPrime REQUIRED PATHS "${CMAKE_CURRENT_LIST_DIR}/..")
 
-# Add subdirectories for the Ref project specific components
-add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/PingReceiver/")
-add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/RecvBuffApp/")
-add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/SendBuffApp/")
-add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/SignalGen/")
-add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/TypeDemo/")
-add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/DpDemo/")
-add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/BlockDriver/")
 add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/Top/")
 
 register_fprime_deployment(

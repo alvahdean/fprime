@@ -39,8 +39,8 @@ module ESP32CdhCore {
     instance version: Svc.Version base id ESP32CdhCoreConfig.BASE_ID + 0x003000 \
     {
         phase Fpp.ToCpp.Phases.configComponents """
-        // Startup TLM and Config verbosity for Versions
-        ESP32CdhCore::version.config(true);
+        // Suppress startup version event/telemetry emission on ESP32.
+        // Svc::Version::config() always emits framework/project/library data.
         """
     }
 

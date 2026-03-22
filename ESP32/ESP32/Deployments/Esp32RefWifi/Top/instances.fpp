@@ -6,7 +6,7 @@ module Esp32RefWifi {
 
   instance rateGroup1Comp: Svc.ActiveRateGroup base id 0x21001000 \
     queue size Default.QUEUE_SIZE \
-    stack size Default.STACK_SIZE \
+    stack size 6144 \
     priority 20
 
   instance rateGroup2Comp: Svc.ActiveRateGroup base id 0x21002000 \

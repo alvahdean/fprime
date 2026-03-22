@@ -30,7 +30,8 @@ This library also consumes the shared FreeRTOS OSAL library from `FreeRTOS` inst
 - `fprime-util generate esp32-idf`
 - `fprime-util build`
 - `ESP32/scripts/build_flash_image.sh <deployment-dir>`
-- `ESP32/scripts/flash.sh <deployment-dir> --port /dev/ttyUSB0`
+- `ESP32/scripts/flash.sh <deployment-dir> --port /dev/ttyUSB0 [--baud 460800] [--monitor]`
+- `ESP32/scripts/monitor.sh <deployment-dir> --port /dev/ttyUSB0 [--baud 115200]`
 - `ESP32/scripts/provision_wifi_config.sh <deployment-dir> --port /dev/ttyUSB0 ...`
 
 ## Notes

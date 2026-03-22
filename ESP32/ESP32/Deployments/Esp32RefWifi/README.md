@@ -7,13 +7,15 @@ Minimal ESP32 Wi-Fi deployment for the `ESP32` F' library.
 - uses the shared `FreeRTOS` OSAL library
 - communicates through `Drv::Esp32WifiDriver`
 - supports both ESP32 SoftAP mode and station mode
+- uses a TCP client transport to the configured ground endpoint
+- publishes basic system memory telemetry every 5 seconds
 - logs Wi-Fi connect/disconnect events to the serial console through the F' console writer
 - packages into a flashable ESP32 image
 
 ## Validated Commands
 ```bash
 export FPRIME_REPO_ROOT="${HOME}/src/fprime.worktrees/esp32-support"
-source "${HOME}/src/fprime/.venv/bin/activate"
+source "${HOME}/src/fprime/venv/bin/activate"
 source "${HOME}/.espressif/tools/activate_idf_v5.5.3.sh"
 
 cd "${FPRIME_REPO_ROOT}/ESP32/ESP32/Deployments/Esp32RefWifi"
@@ -22,6 +24,8 @@ fprime-util build
 
 "${FPRIME_REPO_ROOT}/ESP32/scripts/build_flash_image.sh" .
 "${FPRIME_REPO_ROOT}/ESP32/scripts/flash.sh" . --port /dev/ttyUSB0 --baud 460800
+"${FPRIME_REPO_ROOT}/ESP32/scripts/flash.sh" . --port /dev/ttyUSB0 --baud 460800 --monitor
+"${FPRIME_REPO_ROOT}/ESP32/scripts/monitor.sh" . --port /dev/ttyUSB0
 ```
 
 ## Startup Behavior
@@ -35,11 +39,12 @@ If `fprimecfg` is empty or incomplete, the deployment will assert and Wi-Fi will
 - flash packaging verified
 - hardware flashing verified
 - SoftAP and station bring-up are both part of deployment startup
-- UDP socket transport runs on top of the selected Wi-Fi mode
+- TCP socket transport runs on top of the selected Wi-Fi mode
 - Wi-Fi AP client connect/disconnect and STA connect/disconnect events are logged to the console
 - custom ESP-IDF partitioning is used for this deployment
 - a dedicated `fprimecfg` NVS partition is reserved for future deployment-owned Wi-Fi configuration
 - Wi-Fi mode and credentials can now be provisioned from the host into `fprimecfg` over USB
+- basic memory telemetry (`MEMORY_TOTAL`, `MEMORY_USED`) is emitted every 5 seconds
 - Validated packet flow to a live GDS endpoint in both SoftAP and station mode
 
 ## USB Wi-Fi Provisioning
@@ -91,8 +96,7 @@ Supported provisioned keys:
 
 ## Future work
 - Add a live USB/GDS-based config update path if runtime updates are needed later
-- Add resource telemetry and rate groups
-- Test TCP Com driver
+- Expand TCP interoperability testing
 - Provide drivers for
   - GPIO
   - SPI
@@ -103,4 +107,3 @@ Supported provisioned keys:
   - DAC
   - Hall Effect Sensor
   - Onboard LED
-
