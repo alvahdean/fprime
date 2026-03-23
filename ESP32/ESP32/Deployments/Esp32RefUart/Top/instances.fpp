@@ -2,7 +2,7 @@ module Esp32RefUart {
   module Default {
     constant QUEUE_SIZE = 6
     constant STACK_SIZE = 4 * 1024
-    constant STACK_SIZE_RG1 = 8 * 1024
+    constant STACK_SIZE_RG1 = 6 * 1024
   }
 
   instance rateGroup1Comp: Svc.ActiveRateGroup base id 0x20001000 \

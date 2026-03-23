@@ -52,8 +52,6 @@ module Esp32RefWifi {
     }
 
     connections ComCcsds_CdhCore {
-      ESP32CdhCore.events.PktSend        -> ESP32ComCcsds.comQueue.comPacketQueueIn[ESP32ComCcsds.Ports_ComPacketQueue.EVENTS]
-
       ESP32ComCcsds.fprimeRouter.commandOut -> ESP32CdhCore.cmdDisp.seqCmdBuff
       ESP32CdhCore.cmdDisp.seqCmdStatus     -> ESP32ComCcsds.fprimeRouter.cmdResponseIn
     }

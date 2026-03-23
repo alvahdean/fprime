@@ -96,15 +96,57 @@ bool Esp32WifiDriver::openSocket() {
     int reuse = 1;
     static_cast<void>(lwip_setsockopt(this->m_socket, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)));
 
-    const int status =
-        lwip_connect(this->m_socket, reinterpret_cast<const sockaddr*>(&this->m_remote_addr), sizeof(this->m_remote_addr));
-    if (status == 0) {
-        this->m_connection_state = ConnectionState::CONNECTED;
-        return true;
+    int nonblocking = 1;
+    if (lwip_ioctl(this->m_socket, FIONBIO, &nonblocking) < 0) {
+        this->closeSocket();
+        return false;
     }
 
-    this->closeSocket();
-    return false;
+    int status =
+        lwip_connect(this->m_socket, reinterpret_cast<const sockaddr*>(&this->m_remote_addr), sizeof(this->m_remote_addr));
+    if ((status < 0) && (errno != EINPROGRESS) && (errno != EWOULDBLOCK)) {
+        this->closeSocket();
+        return false;
+    }
+
+    if (status < 0) {
+        fd_set write_fds;
+        fd_set error_fds;
+        FD_ZERO(&write_fds);
+        FD_ZERO(&error_fds);
+        FD_SET(this->m_socket, &write_fds);
+        FD_SET(this->m_socket, &error_fds);
+
+        timeval connect_timeout = {};
+        connect_timeout.tv_sec = 5;
+        connect_timeout.tv_usec = 0;
+
+        status = lwip_select(this->m_socket + 1, nullptr, &write_fds, &error_fds, &connect_timeout);
+        if (status <= 0) {
+            this->closeSocket();
+            return false;
+        }
+
+        int socket_error = 0;
+        socklen_t socket_error_length = sizeof(socket_error);
+        if (lwip_getsockopt(this->m_socket, SOL_SOCKET, SO_ERROR, &socket_error, &socket_error_length) < 0 ||
+            socket_error != 0) {
+            if (socket_error != 0) {
+                errno = socket_error;
+            }
+            this->closeSocket();
+            return false;
+        }
+    }
+
+    nonblocking = 0;
+    if (lwip_ioctl(this->m_socket, FIONBIO, &nonblocking) < 0) {
+        this->closeSocket();
+        return false;
+    }
+
+    this->m_connection_state = ConnectionState::CONNECTED;
+    return true;
 #else
     return false;
 #endif

@@ -4,6 +4,7 @@ function(esp32_prepare_idf_wrapper)
     endif()
 
     set(_wrapper_build_dir "${CMAKE_SOURCE_DIR}/idf-wrapper/build")
+    set(_sdkconfig_defaults "${CMAKE_SOURCE_DIR}/idf-wrapper/sdkconfig.defaults")
     set(_sdkconfig_header "${_wrapper_build_dir}/config/sdkconfig.h")
     set(_include_metadata "${_wrapper_build_dir}/fprime_idf_include_dirs.cmake")
     set(_link_metadata "${_wrapper_build_dir}/fprime_idf_link_info.cmake")
@@ -12,8 +13,17 @@ function(esp32_prepare_idf_wrapper)
         set(ESP32_IDF_FORCE_RECONFIGURE OFF)
     endif()
 
+    set(_needs_prepare OFF)
     if (EXISTS "${_sdkconfig_header}" AND EXISTS "${_include_metadata}" AND EXISTS "${_link_metadata}" AND
         NOT ESP32_IDF_FORCE_RECONFIGURE)
+        if (EXISTS "${_sdkconfig_defaults}" AND "${_sdkconfig_defaults}" IS_NEWER_THAN "${_sdkconfig_header}")
+            set(_needs_prepare ON)
+        endif()
+    else()
+        set(_needs_prepare ON)
+    endif()
+
+    if (NOT _needs_prepare)
         return()
     endif()
 
