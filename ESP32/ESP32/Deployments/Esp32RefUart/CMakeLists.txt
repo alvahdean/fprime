@@ -4,6 +4,7 @@ project(Esp32RefUart VERSION 0.1.0 LANGUAGES C CXX)
 
 set(FPRIME_INCLUDE_FRAMEWORK_CODE ON)
 find_package(FPrime REQUIRED PATHS "${CMAKE_CURRENT_LIST_DIR}/../../../..")
+include("${CMAKE_CURRENT_LIST_DIR}/../../../cmake/esp32_idf_wrapper.cmake")
 
 add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../../Svc/LedController")
 add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../../Drv/Esp32GpioDriver")
@@ -25,3 +26,4 @@ register_fprime_deployment(
 )
 
 add_custom_target(ESP32_Deployments_Esp32RefUart DEPENDS Esp32RefUart)
+esp32_register_flash_image_target(Esp32RefUart)

@@ -6,19 +6,19 @@ Minimal ESP32 UART deployment for the `ESP32` F' library.
 - builds as a normal F' deployment with `fprime-util`
 - uses the shared `FreeRTOS` OSAL library
 - communicates through `Drv::Esp32UartDriver`
+- includes the shared LED controller and ESP32 GPIO backend
+- supports command, event, and telemetry flow over the UART link
 - packages into a flashable ESP32 image
 
 ## Validated Commands
 ```bash
 export FPRIME_REPO_ROOT="${HOME}/src/fprime.worktrees/esp32-support"
-source "${HOME}/src/fprime/.venv/bin/activate"
-source "${HOME}/.espressif/tools/activate_idf_v5.5.3.sh"
+source "${FPRIME_REPO_ROOT}/ESP32/scripts/build-env.sh"
 
 cd "${FPRIME_REPO_ROOT}/ESP32/ESP32/Deployments/Esp32RefUart"
 fprime-util generate esp32-idf
 fprime-util build
 
-"${FPRIME_REPO_ROOT}/ESP32/scripts/build_flash_image.sh" .
 "${FPRIME_REPO_ROOT}/ESP32/scripts/flash.sh" . --port /dev/ttyUSB0 --baud 460800
 "${FPRIME_REPO_ROOT}/ESP32/scripts/flash.sh" . --port /dev/ttyUSB0 --baud 460800 --monitor
 "${FPRIME_REPO_ROOT}/ESP32/scripts/monitor.sh" . --port /dev/ttyUSB0
@@ -33,7 +33,7 @@ fprime-util build
 - LED active high: `1`
 
 These defaults are set through the common deployment config header and overridden through CMake cache variables compiled into the deployment.
-Edit [config/Esp32RefUartDeploymentCfg.hpp](./config/Esp32RefUartDeploymentCfg.hpp) to change the deployment hardware settings, then rerun:
+Edit [Esp32RefUartDeploymentCfg.hpp](/home/dfuqua/src/fprime/ESP32/ESP32/Deployments/Esp32RefUart/config/Esp32RefUartDeploymentCfg.hpp) to change the deployment hardware settings, then rerun:
 
 ```bash
 fprime-util generate esp32-idf --force
@@ -46,4 +46,6 @@ Non-default UART selections on ESP32 usually need TX/RX pin overrides as well.
 - generate/build verified
 - flash packaging verified
 - hardware flashing verified
-- intended as the main ESP32 bring-up path for eventual GDS communication
+- intended as the main ESP32 bring-up path for GDS communication
+- currently the more complete reference deployment
+- LED control commands are integrated and reusable across deployments

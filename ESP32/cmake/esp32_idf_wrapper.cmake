@@ -57,3 +57,37 @@ function(esp32_prepare_idf_wrapper)
         )
     endif()
 endfunction()
+
+function(esp32_register_flash_image_target deployment_target)
+    if (NOT EXISTS "${CMAKE_SOURCE_DIR}/idf-wrapper/CMakeLists.txt")
+        return()
+    endif()
+
+    find_program(ESP32_BASH_PROGRAM bash)
+    if (NOT ESP32_BASH_PROGRAM)
+        message(FATAL_ERROR "ESP32 flash image packaging requires bash")
+    endif()
+
+    set(_build_flash_image_script "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../scripts/build_flash_image.sh")
+    if (NOT EXISTS "${_build_flash_image_script}")
+        message(FATAL_ERROR "Missing ESP32 flash image packaging script: ${_build_flash_image_script}")
+    endif()
+
+    set(_flash_manifest "${CMAKE_SOURCE_DIR}/idf-wrapper/build/fprime_flash_artifacts.json")
+
+    add_custom_command(TARGET "${deployment_target}" POST_BUILD
+        COMMAND "${ESP32_BASH_PROGRAM}" "${_build_flash_image_script}" "${CMAKE_SOURCE_DIR}"
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+        COMMENT "Packaging ESP32 flash image for ${deployment_target}"
+        VERBATIM
+    )
+
+    add_custom_target(esp32_flash_image
+        COMMAND "${ESP32_BASH_PROGRAM}" "${_build_flash_image_script}" "${CMAKE_SOURCE_DIR}"
+        BYPRODUCTS "${_flash_manifest}"
+        DEPENDS "${deployment_target}"
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+        COMMENT "Packaging ESP32 flash image for ${deployment_target}"
+        VERBATIM
+    )
+endfunction()

@@ -3,27 +3,30 @@ set -euo pipefail
 
 usage() {
     cat >&2 <<'EOF'
-Usage: monitor.sh <deployment-dir> --port <serial-port> [--baud <rate>] [--timestamps] [--no-reset]
+Usage: monitor.sh [deployment-dir] --port <serial-port> [--baud <rate>] [--timestamps] [--no-reset]
 Example:
   monitor.sh $HOME/src/fprime/ESP32/ESP32/Deployments/Esp32RefUart --port /dev/ttyUSB0
+  monitor.sh --port /dev/ttyUSB0
 
 Notes:
+  If <deployment-dir> is omitted, the current directory is used.
   Exit the ESP-IDF monitor with Ctrl-]
 EOF
 }
 
-if [[ $# -lt 1 ]]; then
-    usage
-    exit 1
-fi
-
-if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+if [[ $# -gt 0 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     usage
     exit 0
 fi
 
-DEPLOY_DIR="$(realpath "$1")"
-shift
+DEPLOY_DIR=""
+
+if [[ $# -gt 0 && "$1" != --* ]]; then
+    DEPLOY_DIR="$(realpath "$1")"
+    shift
+else
+    DEPLOY_DIR="$(pwd -P)"
+fi
 
 PORT=""
 BAUD=""

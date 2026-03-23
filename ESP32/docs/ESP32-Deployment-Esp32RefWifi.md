@@ -8,21 +8,20 @@ Minimal ESP32 Wi-Fi deployment for the `ESP32` F' library.
 - communicates through `Drv::Esp32WifiDriver`
 - supports both ESP32 SoftAP mode and station mode
 - uses a TCP client transport to the configured ground endpoint
-- publishes basic system memory telemetry every 5 seconds
+- currently targets simple command bring-up over Wi-Fi
 - logs Wi-Fi connect/disconnect events to the serial console through the F' console writer
+- includes the shared LED controller and ESP32 GPIO backend
 - packages into a flashable ESP32 image
 
 ## Validated Commands
 ```bash
 export FPRIME_REPO_ROOT="${HOME}/src/fprime.worktrees/esp32-support"
-source "${HOME}/src/fprime/venv/bin/activate"
-source "${HOME}/.espressif/tools/activate_idf_v5.5.3.sh"
+source "${FPRIME_REPO_ROOT}/ESP32/scripts/build-env.sh"
 
 cd "${FPRIME_REPO_ROOT}/ESP32/ESP32/Deployments/Esp32RefWifi"
 fprime-util generate esp32-idf
 fprime-util build
 
-"${FPRIME_REPO_ROOT}/ESP32/scripts/build_flash_image.sh" .
 "${FPRIME_REPO_ROOT}/ESP32/scripts/flash.sh" . --port /dev/ttyUSB0 --baud 460800
 "${FPRIME_REPO_ROOT}/ESP32/scripts/flash.sh" . --port /dev/ttyUSB0 --baud 460800 --monitor
 "${FPRIME_REPO_ROOT}/ESP32/scripts/monitor.sh" . --port /dev/ttyUSB0
@@ -44,8 +43,10 @@ If `fprimecfg` is empty or incomplete, the deployment will assert and Wi-Fi will
 - custom ESP-IDF partitioning is used for this deployment
 - a dedicated `fprimecfg` NVS partition is reserved for future deployment-owned Wi-Fi configuration
 - Wi-Fi mode and credentials can now be provisioned from the host into `fprimecfg` over USB
-- basic memory telemetry (`MEMORY_TOTAL`, `MEMORY_USED`) is emitted every 5 seconds
-- Validated packet flow to a live GDS endpoint in both SoftAP and station mode
+- currently configured as a command-only deployment for reliability on the target
+- event and telemetry downlink are intentionally disabled in the current topology
+- additional service enablement over Wi-Fi is currently limited by ESP32 memory and task-stack constraints
+- simple command tests such as `CMD_NO_OP`, `CMD_NO_OP_STRING`, and LED `GET_STATE`/`SET_STATE`/`TOGGLE` are the current target use cases
 
 ## USB Wi-Fi Provisioning
 The deployment reads Wi-Fi configuration only from the `fprimecfg` NVS partition on boot.
@@ -53,11 +54,13 @@ The deployment reads Wi-Fi configuration only from the `fprimecfg` NVS partition
 The provisioning helper reads defaults from a local `wifi.config` file in this deployment directory when present, then applies command-line overrides on top.
 `wifi.config` should remain untracked. Use `wifi.config.example` as the format reference.
 
+`flash.sh` will automatically run `provision_wifi_config.sh` after flashing when `wifi.config` exists and is newer than the last successful provision stamp.
+
 Provision from local `wifi.config`:
 
 ```bash
 export FPRIME_REPO_ROOT="<YOUR REPO CHECKOUT DIR>"
-source "${FPRIME_REPO_ROOT}/ESP32/scripts/activate-env"
+source "${FPRIME_REPO_ROOT}/ESP32/scripts/build-env.sh"
 
 cd "ESP32/ESP32/Deployments/Esp32RefWifi"
 "${FPRIME_REPO_ROOT}/ESP32/scripts/provision_wifi_config.sh" . \
@@ -68,7 +71,7 @@ Provision with command-line overrides:
 
 ```bash
 export FPRIME_REPO_ROOT="<YOUR REPO CHECKOUT DIR>"
-source "${FPRIME_REPO_ROOT}/ESP32/scripts/activate-env"
+source "${FPRIME_REPO_ROOT}/ESP32/scripts/build-env.sh"
 
 cd "${FPRIME_REPO_ROOT}/ESP32/ESP32/Deployments/Esp32RefWifi"
 "${FPRIME_REPO_ROOT}/ESP32/scripts/provision_wifi_config.sh" . \
@@ -97,13 +100,4 @@ Supported provisioned keys:
 ## Future work
 - Add a live USB/GDS-based config update path if runtime updates are needed later
 - Expand TCP interoperability testing
-- Provide drivers for
-  - GPIO
-  - SPI
-  - I2C
-  - BLE
-  - ADC
-  - I2S
-  - DAC
-  - Hall Effect Sensor
-  - Onboard LED
+- Provide drivers for GPIO, SPI, I2C, BLE, ADC, I2S, DAC, and the Hall effect sensor

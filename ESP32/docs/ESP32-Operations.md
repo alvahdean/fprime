@@ -20,6 +20,8 @@ ESP32 platform library for F'.
 - `ESP32/ESP32/Deployments`
 - `ESP32/scripts`
 
+Script details are documented in [ESP32-Helper-Scripts.md](/home/dfuqua/src/fprime/ESP32/docs/ESP32-Helper-Scripts.md).
+
 ## Prerequisites
 Use a Linux host for the current bring-up flow.
 
@@ -38,8 +40,10 @@ source "${HOME}/.espressif/tools/activate_idf_v5.5.3.sh"
 
 Optional helper:
 ```bash
-source "${FPRIME_REPO_ROOT}/ESP32/scripts/activate-env"
+source "${FPRIME_REPO_ROOT}/ESP32/scripts/build-env.sh"
 ```
+
+`build-env.sh` should be sourced when you want the ESP32 build environment to persist in the current shell.
 
 ## Library Discovery
 Add both `ESP32` and `FreeRTOS` to `settings.ini` when consuming this library outside this repo:
@@ -63,6 +67,10 @@ The shared FreeRTOS library was extended to support ESP-IDF's critical-section A
 ## Generate And Build
 The ESP-IDF wrapper setup runs automatically during CMake configure. Normal `fprime-util generate/build` is the supported flow.
 
+Optional flash image packaging is now available directly in the CMake build:
+- `esp32_flash_image` packages the flashable app image and writes `idf-wrapper/build/fprime_flash_artifacts.json`
+- for the reference `Esp32RefUart` and `Esp32RefWifi` deployments, flash image packaging is attached as a post-build step on the deployment executable, so `fprime-util build` also packages the flash image automatically when the deployment target is rebuilt
+
 ### UART deployment
 ```bash
 cd "${FPRIME_REPO_ROOT}/ESP32/ESP32/Deployments/Esp32RefUart"
@@ -73,12 +81,21 @@ fprime-util build
 `Esp32RefUart` hardware settings live in
 `ESP32/ESP32/Deployments/Esp32RefUart/config/Esp32RefUartDeploymentCfg.hpp`.
 After changing that header, rerun `fprime-util generate esp32-idf --force`.
+Deployment-specific notes live in [ESP32-Deployment-Esp32RefUart.md](/home/dfuqua/src/fprime/ESP32/docs/ESP32-Deployment-Esp32RefUart.md).
 
 ### Wi-Fi deployment
 ```bash
 cd "${FPRIME_REPO_ROOT}/ESP32/ESP32/Deployments/Esp32RefWifi"
 fprime-util generate esp32-idf
 fprime-util build
+```
+
+Deployment-specific notes live in [ESP32-Deployment-Esp32RefWifi.md](/home/dfuqua/src/fprime/ESP32/docs/ESP32-Deployment-Esp32RefWifi.md).
+
+To package manually after a successful build:
+
+```bash
+cmake --build build-fprime-automatic-esp32-idf --target esp32_flash_image
 ```
 
 ## Flash Image Packaging
@@ -106,6 +123,8 @@ Flash with the provided helper:
 ```
 
 The same flow works for `Esp32RefWifi` by changing the deployment path.
+
+For `Esp32RefWifi`, `flash.sh` will also reprovision the `fprimecfg` Wi-Fi partition after flashing when a local `wifi.config` file exists and is newer than the last provision stamp.
 
 Start the monitor automatically after a successful flash:
 
@@ -136,6 +155,10 @@ Optional flags:
 - flash image packaging verified
 - flash to Huzzah32 verified
 - intended as the primary GDS-oriented bring-up deployment
+- currently the more complete reference deployment
+- supports command, event, and telemetry flow over the UART transport
+- includes the shared `Svc.LedController` component with the ESP32 GPIO backend
+- suitable for exercising the LED control commands and normal GDS-visible event/telemetry behavior
 
 ### `Esp32RefWifi`
 - `fprime-util generate esp32-idf` verified
@@ -143,8 +166,13 @@ Optional flags:
 - flash image packaging verified
 - hardware flashing verified
 - supports both SoftAP and station-mode bring-up selected by provisioned `fprimecfg` NVS data
-- UDP socket driver runs on top of the selected Wi-Fi mode
-- Wi-Fi AP client connect/disconnect and STA connect/disconnect events are logged to the console
+- currently configured as a command-only deployment for reliability on the target
+- Wi-Fi transport is used for simple command bring-up and basic ground connectivity checks
+- event and telemetry downlink are intentionally disabled in the current topology
+- includes the shared `Svc.LedController` component with the ESP32 GPIO backend
+- supports simple command testing such as `CMD_NO_OP`, `CMD_NO_OP_STRING`, and LED `GET_STATE`/`SET_STATE`/`TOGGLE`
+- additional service enablement over Wi-Fi is currently limited by ESP32 memory and task-stack constraints
+- Wi-Fi AP client connect/disconnect and STA connect/disconnect events are still visible on the local serial console
 
 ## ESP32 Memory Tuning
 ESP32-specific memory reductions stay local to the library.
@@ -158,6 +186,6 @@ Local tuning lives in:
 This keeps shared `Svc/Subtopologies` defaults unchanged for non-ESP32 builds.
 
 ## Remaining Work
-1. Connect the Wi-Fi deployment to a real GDS endpoint and validate packet flow in both SoftAP and station mode.
-2. Validate the NVS-provisioned Wi-Fi flow against GDS once the post-DHCP runtime abort is fixed.
+1. Re-stabilize the Wi-Fi deployment for full GDS traffic beyond simple command handling.
+2. Re-enable selected Wi-Fi services incrementally once memory and task-stack budgets are characterized.
 3. Add ESP32-focused unit or hardware smoke tests when the deployment shape settles.

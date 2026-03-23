@@ -22,7 +22,19 @@ ApidManager ::ApidManager(const char* const compName) : ApidManagerComponentBase
 // ----------------------------------------------------------------------
 
 U16 ApidManager ::validateApidSeqCountIn_handler(FwIndexType portNum, const ComCfg::Apid& apid, U16 receivedSeqCount) {
-    U16 expectedSequenceCount = this->getAndIncrementSeqCount(apid);
+    U16 expectedSequenceCount = 0;
+    const Fw::Success findStatus = this->m_apidSequences.find(apid, expectedSequenceCount);
+
+    // On first observation of an APID after startup, synchronize silently to the
+    // received sequence count instead of emitting a warning immediately.
+    if (findStatus != Fw::Success::SUCCESS) {
+        if (receivedSeqCount != SEQUENCE_COUNT_ERROR) {
+            this->setNextSeqCount(apid, this->calculateNextSeqCount(receivedSeqCount));
+        }
+        return receivedSeqCount;
+    }
+
+    expectedSequenceCount = this->getAndIncrementSeqCount(apid);
     if (receivedSeqCount != expectedSequenceCount && receivedSeqCount != SEQUENCE_COUNT_ERROR) {
         // Likely a packet was dropped or out of order
         this->log_WARNING_LO_UnexpectedSequenceCount(receivedSeqCount, expectedSequenceCount);

@@ -25,6 +25,7 @@ shift
 PORT=""
 BAUD="460800"
 START_MONITOR="false"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -185,8 +186,27 @@ CMD+=("${FLASH_FILES[@]}")
 echo "Flashing ${DEPLOY_DIR} on ${PORT} at ${BAUD} baud"
 "${CMD[@]}"
 
+WIFI_CONFIG_PATH="${DEPLOY_DIR}/wifi.config"
+WIFI_PROVISION_SCRIPT="${SCRIPT_DIR}/provision_wifi_config.sh"
+WIFI_PROVISION_STAMP="${DEPLOY_DIR}/idf-wrapper/build/fprimecfg_provisioned.stamp"
+
+if [[ -f "${WIFI_CONFIG_PATH}" && -x "${WIFI_PROVISION_SCRIPT}" ]]; then
+    SHOULD_PROVISION="false"
+    if [[ ! -f "${WIFI_PROVISION_STAMP}" ]]; then
+        SHOULD_PROVISION="true"
+    elif [[ "${WIFI_CONFIG_PATH}" -nt "${WIFI_PROVISION_STAMP}" ]]; then
+        SHOULD_PROVISION="true"
+    fi
+
+    if [[ "${SHOULD_PROVISION}" == "true" ]]; then
+        echo "Detected updated Wi-Fi config at ${WIFI_CONFIG_PATH}; provisioning fprimecfg partition"
+        "${WIFI_PROVISION_SCRIPT}" "${DEPLOY_DIR}" --port "${PORT}" --baud "${BAUD}"
+        touch -r "${WIFI_CONFIG_PATH}" "${WIFI_PROVISION_STAMP}"
+    fi
+fi
+
 if [[ "${START_MONITOR}" == "true" ]]; then
-    MONITOR_SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/monitor.sh"
+    MONITOR_SCRIPT="${SCRIPT_DIR}/monitor.sh"
     if [[ ! -x "${MONITOR_SCRIPT}" ]]; then
         echo "Flash completed, but monitor helper is missing or not executable: ${MONITOR_SCRIPT}" >&2
         exit 1
