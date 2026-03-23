@@ -27,8 +27,20 @@ fprime-util build
 ## Current Defaults
 - UART number: `0`
 - baud rate: `115200`
+- TX pin override: `-1` (use ESP-IDF default pin mapping)
+- RX pin override: `-1` (use ESP-IDF default pin mapping)
+- LED pin: `13`
+- LED active high: `1`
 
-These defaults are set in `Main.cpp`.
+These defaults are set through the common deployment config header and overridden through CMake cache variables compiled into the deployment.
+Edit [config/Esp32RefUartDeploymentCfg.hpp](./config/Esp32RefUartDeploymentCfg.hpp) to change the deployment hardware settings, then rerun:
+
+```bash
+fprime-util generate esp32-idf --force
+fprime-util build
+```
+
+Non-default UART selections on ESP32 usually need TX/RX pin overrides as well.
 
 ## Current Status
 - generate/build verified

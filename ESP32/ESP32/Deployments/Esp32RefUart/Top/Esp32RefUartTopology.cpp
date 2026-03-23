@@ -21,7 +21,9 @@ void configureTopology(const TopologyState& state) {
     const bool ledConfigured = ledGpioDriver.configure(state.ledPin, state.ledActiveHigh, Fw::Logic::LOW);
     FW_ASSERT(ledConfigured);
 
-    (void)comDriver.configure(state.uartNum, state.uartBaud);
+    const bool uartConfigured =
+        comDriver.configure(state.uartNum, state.uartBaud, 1024, 1024, state.uartTxPin, state.uartRxPin);
+    FW_ASSERT(uartConfigured);
 }
 }  // namespace
 

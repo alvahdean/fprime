@@ -31,7 +31,6 @@ module Esp32RefWifi {
       rateGroupDriverComp.CycleOut[Ports_RateGroups.rateGroup1] -> rateGroup1Comp.CycleIn
       rateGroup1Comp.RateGroupMemberOut[1] -> ESP32CdhCore.cmdDisp.run
       rateGroup1Comp.RateGroupMemberOut[2] -> ESP32ComCcsds.comQueue.run
-      rateGroup1Comp.RateGroupMemberOut[4] -> systemResources.run
       rateGroup1Comp.RateGroupMemberOut[5] -> wifiDriver.run
 
     }
@@ -53,6 +52,8 @@ module Esp32RefWifi {
     }
 
     connections ComCcsds_CdhCore {
+      ESP32CdhCore.events.PktSend        -> ESP32ComCcsds.comQueue.comPacketQueueIn[ESP32ComCcsds.Ports_ComPacketQueue.EVENTS]
+
       ESP32ComCcsds.fprimeRouter.commandOut -> ESP32CdhCore.cmdDisp.seqCmdBuff
       ESP32CdhCore.cmdDisp.seqCmdStatus     -> ESP32ComCcsds.fprimeRouter.cmdResponseIn
     }

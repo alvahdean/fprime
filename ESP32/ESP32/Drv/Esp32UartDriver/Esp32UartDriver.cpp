@@ -13,7 +13,12 @@ Esp32UartDriver::Esp32UartDriver(const char* compName)
 
 Esp32UartDriver::~Esp32UartDriver() {}
 
-bool Esp32UartDriver::configure(U32 uart_num, U32 baud, U32 rx_buffer_size, U32 tx_buffer_size) {
+bool Esp32UartDriver::configure(U32 uart_num,
+                                U32 baud,
+                                U32 rx_buffer_size,
+                                U32 tx_buffer_size,
+                                I32 tx_pin,
+                                I32 rx_pin) {
     this->m_uart_num = uart_num;
     this->m_rx_buffer_size = rx_buffer_size;
 
@@ -28,6 +33,18 @@ bool Esp32UartDriver::configure(U32 uart_num, U32 baud, U32 rx_buffer_size, U32 
 
     if (uart_param_config(static_cast<uart_port_t>(uart_num), &config) != ESP_OK) {
         return false;
+    }
+
+    const int configured_tx_pin = (tx_pin >= 0) ? static_cast<int>(tx_pin) : UART_PIN_NO_CHANGE;
+    const int configured_rx_pin = (rx_pin >= 0) ? static_cast<int>(rx_pin) : UART_PIN_NO_CHANGE;
+    if ((configured_tx_pin != UART_PIN_NO_CHANGE) || (configured_rx_pin != UART_PIN_NO_CHANGE)) {
+        if (uart_set_pin(static_cast<uart_port_t>(uart_num),
+                         configured_tx_pin,
+                         configured_rx_pin,
+                         UART_PIN_NO_CHANGE,
+                         UART_PIN_NO_CHANGE) != ESP_OK) {
+            return false;
+        }
     }
 
     if (uart_driver_install(static_cast<uart_port_t>(uart_num),

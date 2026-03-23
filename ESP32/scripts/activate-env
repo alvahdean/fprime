@@ -11,4 +11,4 @@ source ${HOME}/.espressif/tools/activate_idf_v5.5.3.sh
 eval "$(python "$IDF_PATH/tools/idf_tools.py" export 2>/dev/null)"; 
 
 # This reasserts the F' python env as primary because the ESP-IDF overwrites it.
-export PATH="${FPRIME_REPO_ROOT}/venv/bin:$PATH"; 
+export PATH="${FPRIME_REPO_ROOT}/venv/bin:$PATH:${FPRIME_REPO_ROOT}/ESP32/scripts"; 

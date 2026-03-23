@@ -182,12 +182,22 @@ Drv::ByteStreamStatus Esp32WifiDriver::send_handler(FwIndexType portNum, Fw::Buf
     }
 
     FwSizeType total_sent = 0;
+    U32 retryCount = 0;
+    static constexpr U32 MAX_SEND_RETRIES = 5;
     while (total_sent < sendBuffer.getSize()) {
         const int sent = lwip_send(
             this->m_socket, sendBuffer.getData() + total_sent, static_cast<size_t>(sendBuffer.getSize() - total_sent), 0);
         if (sent > 0) {
             total_sent += static_cast<FwSizeType>(sent);
+            retryCount = 0;
             continue;
+        }
+        if ((errno == EAGAIN) || (errno == EWOULDBLOCK) || (errno == ENOBUFS)) {
+            if (retryCount < MAX_SEND_RETRIES) {
+                ++retryCount;
+                vTaskDelay(pdMS_TO_TICKS(10));
+                continue;
+            }
         }
         this->closeSocket();
         return Drv::ByteStreamStatus::OTHER_ERROR;

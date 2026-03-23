@@ -31,6 +31,7 @@ namespace {
 
 static constexpr U32 STARTUP_TASK_STACK_BYTES = 8U * 1024U;
 static constexpr TickType_t STARTUP_QUIESCE_TICKS = pdMS_TO_TICKS(1000);
+static const Fw::TimeInterval RATE_GROUP_INTERVAL(0, 200000);
 static const Fw::TimeInterval GROUND_CONNECT_POLL_INTERVAL(0, 100000);
 static const Fw::TimeInterval GROUND_CONNECT_TIMEOUT(15, 0);
 static constexpr const char* WIFI_CONFIG_PARTITION = "fprimecfg";
@@ -668,7 +669,7 @@ void run_esp32_ref_wifi() {
                state.remoteIp,
                static_cast<unsigned>(state.remotePort));
     vTaskDelay(STARTUP_QUIESCE_TICKS);
-    Esp32RefWifi::startRateGroups(Fw::TimeInterval(0, 100000));
+    Esp32RefWifi::startRateGroups(RATE_GROUP_INTERVAL);
 }
 
 static void run_esp32_ref_wifi_task(void* argument) {
@@ -702,7 +703,7 @@ void run_esp32_ref_wifi() {
     state.wifiPassword = "";
 
     Esp32RefWifi::setupTopology(state);
-    Esp32RefWifi::startRateGroups(Fw::TimeInterval(0, 100000));
+    Esp32RefWifi::startRateGroups(RATE_GROUP_INTERVAL);
 }
 
 int main(int argc, char* argv[]) {

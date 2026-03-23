@@ -9,7 +9,7 @@ module ESP32ComCcsdsConfig {
     
     # Reduced substantially for lower-RAM embedded targets (e.g. ESP32)
     module StackSizes {
-        constant comQueue     = 8 * 1024
+        constant comQueue     = 10 * 1024
         constant aggregator   = 4 * 1024
     }
 

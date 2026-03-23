@@ -2,6 +2,7 @@
 #include <Fw/Time/TimeInterval.hpp>
 #include <Fw/Types/Assert.hpp>
 #include <ESP32/Deployments/Esp32RefUart/Top/Esp32RefUartTopology.hpp>
+#include "config/Esp32RefUartDeploymentCfg.hpp"
 
 #if defined(TGT_OS_TYPE_ESP32)
 extern "C" {
@@ -14,8 +15,12 @@ static void run_esp32_ref_uart() {
     Os::init();
 
     Esp32RefUart::TopologyState state;
-    state.uartNum = 0;
-    state.uartBaud = 115200;
+    state.uartNum = Esp32RefUartConfig::UART_NUM;
+    state.uartBaud = Esp32RefUartConfig::UART_BAUD;
+    state.uartTxPin = Esp32RefUartConfig::UART_TX_PIN;
+    state.uartRxPin = Esp32RefUartConfig::UART_RX_PIN;
+    state.ledPin = Esp32RefUartConfig::LED_PIN;
+    state.ledActiveHigh = Esp32RefUartConfig::LED_ACTIVE_HIGH;
 
     Esp32RefUart::setupTopology(state);
     Esp32RefUart::startRateGroups(Fw::TimeInterval(0, 100000));

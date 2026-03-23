@@ -37,6 +37,7 @@ void startDeploymentTasks() {
         static_cast<Os::Task::ParamType>(StackSizes::Esp32RefWifi_rateGroup1Comp),
         Os::Task::TASK_DEFAULT,
         static_cast<Os::Task::ParamType>(TaskIds::Esp32RefWifi_rateGroup1Comp));
+
 }
 
 void configureTopology(const TopologyState& state) {

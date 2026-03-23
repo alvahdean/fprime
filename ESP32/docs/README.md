@@ -70,6 +70,10 @@ fprime-util generate esp32-idf
 fprime-util build
 ```
 
+`Esp32RefUart` hardware settings live in
+`ESP32/ESP32/Deployments/Esp32RefUart/config/Esp32RefUartDeploymentCfg.hpp`.
+After changing that header, rerun `fprime-util generate esp32-idf --force`.
+
 ### Wi-Fi deployment
 ```bash
 cd "${FPRIME_REPO_ROOT}/ESP32/ESP32/Deployments/Esp32RefWifi"
