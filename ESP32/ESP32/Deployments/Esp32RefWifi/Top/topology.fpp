@@ -16,6 +16,8 @@ module Esp32RefWifi {
     instance systemResources
     instance freeRtosTimer
     instance wifiDriver
+    instance ledController
+    instance ledGpioDriver
 
     command connections instance ESP32CdhCore.cmdDisp
     event connections instance ESP32CdhCore.events
@@ -45,9 +47,25 @@ module Esp32RefWifi {
       wifiDriver.ready                      -> ESP32ComCcsds.comStub.drvConnected
     }
 
+    connections Led {
+      ledController.gpioWrite -> ledGpioDriver.gpioWrite
+      ledController.gpioRead  -> ledGpioDriver.gpioRead
+    }
+
     connections ComCcsds_CdhCore {
       ESP32ComCcsds.fprimeRouter.commandOut -> ESP32CdhCore.cmdDisp.seqCmdBuff
       ESP32CdhCore.cmdDisp.seqCmdStatus     -> ESP32ComCcsds.fprimeRouter.cmdResponseIn
+    }
+
+    connections Commands {
+      ledController.CmdReg                  -> ESP32CdhCore.cmdDisp.compCmdReg[7]
+      ESP32CdhCore.cmdDisp.compCmdSend[7]   -> ledController.CmdDisp
+      ledController.CmdStatus               -> ESP32CdhCore.cmdDisp.compCmdStat
+    }
+
+    connections Events {
+      ledController.Log     -> ESP32CdhCore.events.LogRecv
+      ledController.LogText -> ESP32CdhCore.textLogger.TextLogger
     }
   }
 }

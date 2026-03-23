@@ -28,4 +28,8 @@ module Esp32RefWifi {
   instance freeRtosTimer: Svc.FreeRtosTimer base id 0x21007000
 
   instance wifiDriver: Drv.Esp32WifiDriver base id 0x21008000
+
+  instance ledController: Svc.LedController base id 0x21009000
+
+  instance ledGpioDriver: Drv.Esp32GpioDriver base id 0x2100A000
 }

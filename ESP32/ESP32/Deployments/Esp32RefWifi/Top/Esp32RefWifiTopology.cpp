@@ -43,6 +43,9 @@ void configureTopology(const TopologyState& state) {
     rateGroupDriverComp.configure(rateGroupDivisorsSet);
     rateGroup1Comp.configure(rateGroup1Context, FW_NUM_ARRAY_ELEMENTS(rateGroup1Context));
 
+    const bool ledConfigured = ledGpioDriver.configure(state.ledPin, state.ledActiveHigh, Fw::Logic::LOW);
+    FW_ASSERT(ledConfigured);
+
     const bool configured =
         wifiDriver.configure(state.remoteIp, state.remotePort, state.localPort, state.wifiRxBufferSize);
     FW_ASSERT(configured);

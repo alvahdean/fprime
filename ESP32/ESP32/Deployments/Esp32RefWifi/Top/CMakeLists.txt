@@ -9,6 +9,8 @@ register_fprime_module(
       "${CMAKE_CURRENT_LIST_DIR}/Esp32RefWifiTopology.hpp"
       "${CMAKE_CURRENT_LIST_DIR}/Esp32RefWifiTopologyDefs.hpp"
     DEPENDS
+      ESP32_Svc_LedController
+      ESP32_Drv_Esp32GpioDriver
       Svc_OsTime
       ESP32_Drv_Esp32WifiDriver
       ESP32_Subtopologies_ESP32CdhCore

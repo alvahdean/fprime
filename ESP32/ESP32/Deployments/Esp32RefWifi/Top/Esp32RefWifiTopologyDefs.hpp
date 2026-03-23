@@ -31,6 +31,8 @@ struct TopologyState {
     const char* remoteIp = nullptr;
     unsigned short remotePort = 0;
     unsigned short localPort = 0;
+    unsigned int ledPin = 13;
+    bool ledActiveHigh = true;
     WifiMode wifiMode = WifiMode::SOFT_AP;
     const char* wifiSsid = nullptr;
     const char* wifiPassword = nullptr;

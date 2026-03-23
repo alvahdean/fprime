@@ -5,6 +5,8 @@ project(Esp32RefUart VERSION 0.1.0 LANGUAGES C CXX)
 set(FPRIME_INCLUDE_FRAMEWORK_CODE ON)
 find_package(FPrime REQUIRED PATHS "${CMAKE_CURRENT_LIST_DIR}/../../../..")
 
+add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../../Svc/LedController")
+add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../../Drv/Esp32GpioDriver")
 add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/config")
 add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/Top")
 
@@ -13,6 +15,8 @@ register_fprime_deployment(
     SOURCES
         "${CMAKE_CURRENT_LIST_DIR}/Main.cpp"
     DEPENDS
+        ESP32_Svc_LedController
+        ESP32_Drv_Esp32GpioDriver
         ESP32_Deployments_Esp32RefUart_Top
         ESP32_Drv_Esp32UartDriver
         ESP32_Subtopologies_ESP32CdhCore

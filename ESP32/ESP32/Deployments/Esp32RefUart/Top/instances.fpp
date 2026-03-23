@@ -29,4 +29,8 @@ module Esp32RefUart {
   instance freeRtosTimer: Svc.FreeRtosTimer base id 0x20007000
 
   instance comDriver: Drv.Esp32UartDriver base id 0x20008000
+
+  instance ledController: Svc.LedController base id 0x20009000
+
+  instance ledGpioDriver: Drv.Esp32GpioDriver base id 0x2000A000
 }

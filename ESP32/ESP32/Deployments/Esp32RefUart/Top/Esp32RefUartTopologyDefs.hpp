@@ -25,6 +25,8 @@ namespace Esp32RefUart {
 struct TopologyState {
     unsigned int uartNum = 0;
     unsigned int uartBaud = 115200;
+    unsigned int ledPin = 13;
+    bool ledActiveHigh = true;
     ESP32CdhCore::SubtopologyState cdhCore;
     ESP32ComCcsds::SubtopologyState comCcsds;
 };

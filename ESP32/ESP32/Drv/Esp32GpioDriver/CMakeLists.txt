@@ -1,0 +1,11 @@
+register_fprime_module(
+    ESP32_Drv_Esp32GpioDriver
+    AUTOCODER_INPUTS
+      "${CMAKE_CURRENT_LIST_DIR}/Esp32GpioDriver.fpp"
+    SOURCES
+      "${CMAKE_CURRENT_LIST_DIR}/Esp32GpioDriver.cpp"
+    HEADERS
+      "${CMAKE_CURRENT_LIST_DIR}/Esp32GpioDriver.hpp"
+    DEPENDS
+      Drv_Interfaces
+)

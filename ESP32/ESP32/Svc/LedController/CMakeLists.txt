@@ -1,0 +1,11 @@
+register_fprime_module(
+    ESP32_Svc_LedController
+    AUTOCODER_INPUTS
+      "${CMAKE_CURRENT_LIST_DIR}/LedController.fpp"
+    SOURCES
+      "${CMAKE_CURRENT_LIST_DIR}/LedController.cpp"
+    HEADERS
+      "${CMAKE_CURRENT_LIST_DIR}/LedController.hpp"
+    DEPENDS
+      Drv_Interfaces
+)

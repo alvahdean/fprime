@@ -18,6 +18,8 @@ module Esp32RefUart {
     instance systemResources
     instance freeRtosTimer
     instance comDriver
+    instance ledController
+    instance ledGpioDriver
 
     command connections instance ESP32CdhCore.cmdDisp
     event connections instance ESP32CdhCore.events
@@ -53,12 +55,28 @@ module Esp32RefUart {
       comDriver.ready                       -> ESP32ComCcsds.comStub.drvConnected
     }
 
+    connections Led {
+      ledController.gpioWrite -> ledGpioDriver.gpioWrite
+      ledController.gpioRead  -> ledGpioDriver.gpioRead
+    }
+
     connections ComCcsds_CdhCore {
       ESP32CdhCore.events.PktSend     -> ESP32ComCcsds.comQueue.comPacketQueueIn[ESP32ComCcsds.Ports_ComPacketQueue.EVENTS]
       ESP32CdhCore.tlmSend.PktSend    -> ESP32ComCcsds.comQueue.comPacketQueueIn[ESP32ComCcsds.Ports_ComPacketQueue.TELEMETRY]
 
       ESP32ComCcsds.fprimeRouter.commandOut -> ESP32CdhCore.cmdDisp.seqCmdBuff
       ESP32CdhCore.cmdDisp.seqCmdStatus     -> ESP32ComCcsds.fprimeRouter.cmdResponseIn
+    }
+
+    connections Commands {
+      ledController.CmdReg                  -> ESP32CdhCore.cmdDisp.compCmdReg[7]
+      ESP32CdhCore.cmdDisp.compCmdSend[7]   -> ledController.CmdDisp
+      ledController.CmdStatus               -> ESP32CdhCore.cmdDisp.compCmdStat
+    }
+
+    connections Events {
+      ledController.Log     -> ESP32CdhCore.events.LogRecv
+      ledController.LogText -> ESP32CdhCore.textLogger.TextLogger
     }
   }
 }

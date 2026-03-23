@@ -1,5 +1,6 @@
 #include <ESP32/Deployments/Esp32RefUart/Top/Esp32RefUartTopologyAc.hpp>
 
+#include <Fw/Types/Assert.hpp>
 #include <Svc/ActiveRateGroup/ActiveRateGroup.hpp>
 #include <Svc/RateGroupDriver/RateGroupDriver.hpp>
 
@@ -16,6 +17,9 @@ void configureTopology(const TopologyState& state) {
     rateGroup1Comp.configure(rateGroup1Context, FW_NUM_ARRAY_ELEMENTS(rateGroup1Context));
     rateGroup2Comp.configure(rateGroup2Context, FW_NUM_ARRAY_ELEMENTS(rateGroup2Context));
     rateGroup3Comp.configure(rateGroup3Context, FW_NUM_ARRAY_ELEMENTS(rateGroup3Context));
+
+    const bool ledConfigured = ledGpioDriver.configure(state.ledPin, state.ledActiveHigh, Fw::Logic::LOW);
+    FW_ASSERT(ledConfigured);
 
     (void)comDriver.configure(state.uartNum, state.uartBaud);
 }
